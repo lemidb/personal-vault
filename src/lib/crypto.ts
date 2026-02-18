@@ -24,9 +24,9 @@ export const decrypt = <T>(encryptedData: string, userId: string): T => {
 export const encryptFile = async (file: File, userId: string): Promise<Blob> => {
   const key = getEncryptionKey(userId);
   const arrayBuffer = await file.arrayBuffer();
-  const wordArray = CryptoJS.lib.WordArray.create(arrayBuffer as unknown as number[]);
+  const wordArray = CryptoJS.lib.WordArray.create(new Uint8Array(arrayBuffer) as any);
   const encrypted = CryptoJS.AES.encrypt(wordArray, key).toString();
-  return new Blob([encrypted], { type: 'application/octet-stream' });
+  return new Blob([encrypted], { type: 'text/plain' });
 };
 
 export const decryptFile = async (
@@ -37,15 +37,15 @@ export const decryptFile = async (
   const key = getEncryptionKey(userId);
   const text = await encryptedBlob.text();
   const decrypted = CryptoJS.AES.decrypt(text, key);
-  
+
   // Convert WordArray to Uint8Array
   const words = decrypted.words;
   const sigBytes = decrypted.sigBytes;
   const u8 = new Uint8Array(sigBytes);
-  
+
   for (let i = 0; i < sigBytes; i++) {
     u8[i] = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
   }
-  
+
   return new Blob([u8], { type: mimeType });
 };

@@ -35,7 +35,6 @@ export const Header = ({ email, onSignOut }: HeaderProps) => {
           <DropdownMenuContent align="end" className="w-56">
             <div className="px-2 py-1.5">
               <p className="text-sm font-medium">{email}</p>
-              <p className="text-xs text-muted-foreground">Secured with AES-256</p>
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onSignOut} className="text-destructive">

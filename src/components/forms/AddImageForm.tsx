@@ -36,7 +36,7 @@ interface AddImageFormProps {
   onSubmit: (data: {
     title: string;
     type: VaultType;
-    data: { description?: string; filename: string };
+    data: { description?: string; filename: string; mimeType: string };
     tags?: string[];
     file: File;
   }) => void;
@@ -87,6 +87,7 @@ export const AddImageForm = ({ onSubmit, isLoading }: AddImageFormProps) => {
       data: {
         description: data.description || undefined,
         filename: file.name,
+        mimeType: file.type || 'image/png',
       },
       tags,
       file,

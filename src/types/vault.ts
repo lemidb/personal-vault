@@ -47,6 +47,7 @@ export interface LinkData {
 export interface ImageData {
   description?: string;
   filename: string;
+  mimeType: string;
 }
 
 export interface VaultStats {

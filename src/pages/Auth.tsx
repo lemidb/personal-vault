@@ -72,9 +72,6 @@ const Auth = () => {
           <h1 className="text-3xl font-bold tracking-tight">
             <span className="gradient-text">Personal Vault</span>
           </h1>
-          <p className="mt-2 text-muted-foreground">
-            Zero-knowledge encrypted storage
-          </p>
         </div>
 
         <Card className="border-border/50 shadow-xl">
@@ -152,11 +149,6 @@ const Auth = () => {
                   ? "Don't have an account? Sign up"
                   : 'Already have an account? Sign in'}
               </button>
-            </div>
-
-            <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-              <Lock className="h-3 w-3" />
-              <span>End-to-end encrypted with AES-256</span>
             </div>
           </CardContent>
         </Card>

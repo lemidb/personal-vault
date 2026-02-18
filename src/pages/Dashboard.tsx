@@ -8,8 +8,6 @@ import { AddEntryDialog } from '@/components/layout/AddEntryDialog';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { VaultList } from '@/components/vault/VaultList';
 import { VaultFilters } from '@/components/vault/VaultFilters';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Plus } from 'lucide-react';
 import type { VaultType } from '@/types/vault';
 import { useEffect } from 'react';
 

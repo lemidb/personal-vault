@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Key, FileText, Link2, CreditCard, Image, Eye, EyeOff, Copy, Trash2, ExternalLink } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Key, FileText, Link2, CreditCard, Image, Eye, EyeOff, Copy, Trash2, ExternalLink, Loader2, Maximize2 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +16,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import type { DecryptedVaultEntry, PasswordData, NoteData, LinkData } from '@/types/vault';
+import { getDecryptedFileUrl } from '@/api/storage';
+import { supabase } from '@/integrations/supabase/client';
+import type { DecryptedVaultEntry, PasswordData, NoteData, LinkData, ImageData } from '@/types/vault';
 
 interface VaultEntryCardProps {
   entry: DecryptedVaultEntry;
@@ -44,8 +46,42 @@ const colorMap = {
 
 export const VaultEntryCard = ({ entry, onDelete, isDeleting }: VaultEntryCardProps) => {
   const [showPassword, setShowPassword] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [isImageLoading, setIsImageLoading] = useState(false);
   const { toast } = useToast();
   const Icon = iconMap[entry.type];
+
+  useEffect(() => {
+    const loadImage = async () => {
+      if (
+        entry.storage_path &&
+        (entry.type === 'image' ||
+          entry.type === 'transaction_screenshot' ||
+          entry.type === 'password_screenshot')
+      ) {
+        setIsImageLoading(true);
+        try {
+          const imageData = entry.data as ImageData;
+          const url = await getDecryptedFileUrl(
+            entry.user_id,
+            entry.storage_path,
+            imageData.mimeType || 'image/png'
+          );
+          setImageUrl(url);
+        } catch (error) {
+          console.error('Failed to load image:', error);
+        } finally {
+          setIsImageLoading(false);
+        }
+      }
+    };
+
+    loadImage();
+
+    return () => {
+      if (imageUrl) URL.revokeObjectURL(imageUrl);
+    };
+  }, [entry]);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -146,6 +182,51 @@ export const VaultEntryCard = ({ entry, onDelete, isDeleting }: VaultEntryCardPr
             {data.description && (
               <p className="text-sm text-muted-foreground">{data.description}</p>
             )}
+          </div>
+        );
+      }
+
+      case 'image':
+      case 'transaction_screenshot':
+      case 'password_screenshot': {
+        const data = entry.data as ImageData;
+        return (
+          <div className="space-y-3">
+            {data.description && (
+              <p className="text-sm text-muted-foreground">{data.description}</p>
+            )}
+            <div className="relative group rounded-lg border border-border overflow-hidden bg-secondary/30 min-h-[160px] flex items-center justify-center">
+              {isImageLoading ? (
+                <div className="flex flex-col items-center gap-2">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground italic">Decrypting...</span>
+                </div>
+              ) : imageUrl ? (
+                <>
+                  <img
+                    src={imageUrl}
+                    alt={entry.title}
+                    className="w-full h-40 object-cover transition-transform group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => window.open(imageUrl, '_blank')}
+                    >
+                      <Maximize2 className="h-4 w-4" />
+                      View Full
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                  <Image className="h-8 w-8 opacity-20" />
+                  <span className="text-xs">Image unavailable</span>
+                </div>
+              )}
+            </div>
           </div>
         );
       }
