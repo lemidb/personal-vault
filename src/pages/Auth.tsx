@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Shield, Loader2, Lock, Mail } from 'lucide-react';
+import { Shield, Loader2, Lock, Mail, Eye, EyeIcon } from 'lucide-react';
 import { useAuth } from '@/services/useAuth';
 import { authSchema, type AuthFormData } from '@/schemas/vault';
 import {
@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -32,6 +33,10 @@ const Auth = () => {
       password: '',
     },
   });
+
+  const togglePasswordView = () => {
+    showPassword ? setShowPassword(false) : setShowPassword(true)
+  }
 
   const onSubmit = async (data: AuthFormData) => {
     setIsLoading(true);
@@ -120,11 +125,14 @@ const Auth = () => {
                         <div className="relative">
                           <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                           <Input
-                            type="password"
+                            type={showPassword ? "text" : "password"}
                             placeholder="••••••••"
                             className="pl-10"
                             {...field}
                           />
+                          <Button type='button' variant='ghost' onClick={togglePasswordView} className='absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground'>
+                            <EyeIcon />
+                          </Button>
                         </div>
                       </FormControl>
                       <FormMessage />
@@ -140,15 +148,16 @@ const Auth = () => {
             </Form>
 
             <div className="mt-6 text-center">
-              <button
+              <Button
                 type="button"
+                variant='ghost'
                 onClick={() => setIsLogin(!isLogin)}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 {isLogin
                   ? "Don't have an account? Sign up"
                   : 'Already have an account? Sign in'}
-              </button>
+              </Button>
             </div>
           </CardContent>
         </Card>
