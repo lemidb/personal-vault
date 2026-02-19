@@ -11,7 +11,7 @@ interface DashboardStatsProps {
 export const DashboardStats = ({ stats, isLoading }: DashboardStatsProps) => {
   if (isLoading) {
     return (
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="vault-grid">
         {[...Array(4)].map((_, i) => (
           <Skeleton key={i} className="h-[120px] rounded-xl" />
         ))}
@@ -20,7 +20,7 @@ export const DashboardStats = ({ stats, isLoading }: DashboardStatsProps) => {
   }
 
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="vault-grid">
       <StatCard
         title="Passwords"
         value={stats?.password || 0}

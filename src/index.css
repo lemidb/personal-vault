@@ -2,9 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ========================================================= */
-/* 🌞 LIGHT THEME (DEFAULT) */
-/* ========================================================= */
 @layer base {
   :root {
     --background: 210 40% 98%;
@@ -82,9 +79,6 @@
   }
 }
 
-/* ========================================================= */
-/* 🌙 DARK THEME (YOUR ORIGINAL – UNTOUCHED) */
-/* ========================================================= */
 @layer base {
   .dark {
     --background: 220 20% 4%;
@@ -138,9 +132,6 @@
   }
 }
 
-/* ========================================================= */
-/* GLOBAL BASE STYLES */
-/* ========================================================= */
 @layer base {
   * {
     @apply border-border;
@@ -153,5 +144,82 @@
 
   html {
     scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .glass-card {
+    background: hsl(var(--glass-bg));
+    border: 1px solid hsl(var(--glass-border));
+    @apply backdrop-blur-xl shadow-lg;
+  }
+
+  .gradient-text {
+    background-image: var(--gradient-primary);
+    @apply bg-clip-text text-transparent;
+  }
+
+  .vault-grid {
+    @apply grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4;
+  }
+
+  .stat-card {
+    @apply relative overflow-hidden rounded-xl border border-border/50 bg-card p-6 transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5;
+  }
+
+  .stat-card::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: radial-gradient(circle at 50% 0%,
+        hsl(var(--primary) / 0.1),
+        transparent 70%);
+  }
+
+  .stat-card:hover::before {
+    @apply opacity-100;
+  }
+
+  .entry-card {
+    @apply relative overflow-hidden rounded-lg border border-border/50 bg-card p-4 transition-all duration-200 hover:border-border;
+  }
+
+  .fab {
+    @apply fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 flex items-center justify-center transition-transform hover:scale-105 active:scale-95 md:hidden;
+  }
+
+  .mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+
+@layer utilities {
+  .animate-in {
+    animation: animateIn 0.3s ease-out;
+  }
+
+  @keyframes animateIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }
