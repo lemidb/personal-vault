@@ -14,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import type { DecryptedVaultEntry, PasswordData } from '@/types/vault';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100),
@@ -34,20 +35,23 @@ interface AddPasswordFormProps {
     tags?: string[];
   }) => void;
   isLoading?: boolean;
+  initialData?: DecryptedVaultEntry;
 }
 
-export const AddPasswordForm = ({ onSubmit, isLoading }: AddPasswordFormProps) => {
+export const AddPasswordForm = ({ onSubmit, isLoading, initialData }: AddPasswordFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
+  const isEditing = !!initialData;
+  const passwordData = initialData?.data as PasswordData | undefined;
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: '',
-      username: '',
-      password: '',
-      url: '',
-      notes: '',
-      tags: '',
+      title: initialData?.title || '',
+      username: passwordData?.username || '',
+      password: passwordData?.password || '',
+      url: passwordData?.url || '',
+      notes: passwordData?.notes || '',
+      tags: initialData?.tags?.join(', ') || '',
     },
   });
 
@@ -182,9 +186,10 @@ export const AddPasswordForm = ({ onSubmit, isLoading }: AddPasswordFormProps) =
 
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Save Password
+          {isEditing ? 'Update Password' : 'Save Password'}
         </Button>
       </form>
     </Form>
   );
 };
+

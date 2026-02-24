@@ -7,7 +7,7 @@ import {
   updateVaultEntry,
   deleteVaultEntry,
 } from '@/api/vault';
-import { uploadEncryptedFile } from '@/api/storage';
+import { uploadEncryptedFile, deleteFile } from '@/api/storage';
 import type { VaultType, VaultEntryData, CreateVaultEntryInput, UpdateVaultEntryInput } from '@/types/vault';
 import { useToast } from '@/hooks/use-toast';
 
@@ -78,6 +78,7 @@ export const useAddVaultEntry = () => {
 };
 
 export const useUpdateVaultEntry = () => {
+
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -89,10 +90,24 @@ export const useUpdateVaultEntry = () => {
       userId: string;
       input: UpdateVaultEntryInput;
     }) => {
+      let storagePath = undefined;
+      if (input.file) {
+        storagePath = await uploadEncryptedFile(userId, input.file);
+
+        if (input.oldStoragePath) {
+          try {
+            await deleteFile(input.oldStoragePath);
+          } catch (error) {
+            console.error('Failed to delete old file:', error);
+          }
+        }
+      }
+
       return updateVaultEntry(userId, input.id, {
         title: input.title,
         data: input.data,
         tags: input.tags,
+        storagePath: storagePath,
       });
     },
     onSuccess: () => {
@@ -111,6 +126,7 @@ export const useUpdateVaultEntry = () => {
     },
   });
 };
+
 
 export const useDeleteVaultEntry = () => {
   const queryClient = useQueryClient();

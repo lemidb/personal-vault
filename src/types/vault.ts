@@ -73,4 +73,7 @@ export interface UpdateVaultEntryInput {
   title?: string;
   data?: VaultEntryData;
   tags?: string[];
+  file?: File;
+  oldStoragePath?: string;
 }
+

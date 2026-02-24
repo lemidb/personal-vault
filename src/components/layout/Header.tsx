@@ -1,4 +1,4 @@
-import { Shield, LogOut, User } from 'lucide-react';
+import { Shield, LogOut, User, Key, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ThemeToggle } from '@/context/theme-toggle';
+import { Link } from 'react-router-dom';
 
 interface HeaderProps {
   email?: string;
@@ -18,14 +19,16 @@ export const Header = ({ email, onSignOut }: HeaderProps) => {
   return (
     <header className="sticky top-0 z-40 border-b border-border/50 bg-background/80 backdrop-blur-xl">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <Shield className="h-5 w-5 text-primary-foreground" />
+        <Link to="/">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+              <Shield className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <span className="text-xl font-semibold tracking-tight">
+              <span className="gradient-text">Vault</span>
+            </span>
           </div>
-          <span className="text-xl font-semibold tracking-tight">
-            <span className="gradient-text">Vault</span>
-          </span>
-        </div>
+        </Link>
         <div className="flex items-center gap-3 justify-end">
           <ThemeToggle />
           <DropdownMenu>
@@ -39,6 +42,12 @@ export const Header = ({ email, onSignOut }: HeaderProps) => {
                 <p className="text-sm font-medium">{email}</p>
               </div>
               <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-destructive">
+                <Link to="/auth/change-password" className="flex items-center">
+                  <Key className="mr-2 h-4 w-4" />
+                  Change Password
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={onSignOut} className="text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign out

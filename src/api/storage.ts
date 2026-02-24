@@ -5,10 +5,9 @@ export const uploadEncryptedFile = async (
   userId: string,
   file: File
 ): Promise<string> => {
-  // Encrypt the file before uploading
+
   const encryptedBlob = await encryptFile(file, userId);
 
-  // Generate unique path
   const timestamp = Date.now();
   const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
   const path = `${userId}/${timestamp}_${safeName}.encrypted`;
@@ -29,21 +28,18 @@ export const getDecryptedFileUrl = async (
   storagePath: string,
   mimeType: string
 ): Promise<string> => {
-  // Get signed URL (1 hour expiry)
+
   const { data: signedUrlData, error: signedError } = await supabase.storage
     .from('vault')
     .createSignedUrl(storagePath, 3600);
 
   if (signedError) throw signedError;
 
-  // Download the encrypted file
   const response = await fetch(signedUrlData.signedUrl);
   const encryptedBlob = await response.blob();
 
-  // Decrypt the file
   const decryptedBlob = await decryptFile(encryptedBlob, userId, mimeType);
 
-  // Create object URL for display
   return URL.createObjectURL(decryptedBlob);
 };
 

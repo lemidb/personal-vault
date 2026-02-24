@@ -13,6 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import type { DecryptedVaultEntry, NoteData } from '@/types/vault';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100),
@@ -30,15 +31,19 @@ interface AddNoteFormProps {
     tags?: string[];
   }) => void;
   isLoading?: boolean;
+  initialData?: DecryptedVaultEntry;
 }
 
-export const AddNoteForm = ({ onSubmit, isLoading }: AddNoteFormProps) => {
+export const AddNoteForm = ({ onSubmit, isLoading, initialData }: AddNoteFormProps) => {
+  const isEditing = !!initialData;
+  const noteData = initialData?.data as NoteData | undefined;
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: '',
-      content: '',
-      tags: '',
+      title: initialData?.title || '',
+      content: noteData?.content || '',
+      tags: initialData?.tags?.join(', ') || '',
     },
   });
 
@@ -108,9 +113,10 @@ export const AddNoteForm = ({ onSubmit, isLoading }: AddNoteFormProps) => {
 
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Save Note
+          {isEditing ? 'Update Note' : 'Save Note'}
         </Button>
       </form>
     </Form>
   );
 };
+

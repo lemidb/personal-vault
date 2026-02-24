@@ -37,7 +37,6 @@ export const fetchVaultEntries = async (
 
   if (error) throw error;
 
-  // Decrypt each entry
   return (data as VaultEntry[]).map((entry) => {
     const decryptedData = decrypt<VaultEntryData>(entry.encrypted_data, userId);
     return {
@@ -107,6 +106,7 @@ export const updateVaultEntry = async (
     title?: string;
     data?: VaultEntryData;
     tags?: string[];
+    storagePath?: string;
   }
 ): Promise<VaultEntry> => {
   const updatePayload: Record<string, unknown> = {};
@@ -122,6 +122,11 @@ export const updateVaultEntry = async (
   if (updates.tags) {
     updatePayload.tags = updates.tags;
   }
+
+  if (updates.storagePath) {
+    updatePayload.storage_path = updates.storagePath;
+  }
+
 
   const { data, error } = await supabase
     .from('vault_entries')
@@ -140,7 +145,6 @@ export const deleteVaultEntry = async (
   id: string,
   storagePath?: string
 ): Promise<void> => {
-  // Delete storage file if exists
   if (storagePath) {
     await supabase.storage.from('vault').remove([storagePath]);
   }

@@ -13,6 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import type { DecryptedVaultEntry, LinkData } from '@/types/vault';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100),
@@ -31,16 +32,20 @@ interface AddLinkFormProps {
     tags?: string[];
   }) => void;
   isLoading?: boolean;
+  initialData?: DecryptedVaultEntry;
 }
 
-export const AddLinkForm = ({ onSubmit, isLoading }: AddLinkFormProps) => {
+export const AddLinkForm = ({ onSubmit, isLoading, initialData }: AddLinkFormProps) => {
+  const isEditing = !!initialData;
+  const linkData = initialData?.data as LinkData | undefined;
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: '',
-      url: '',
-      description: '',
-      tags: '',
+      title: initialData?.title || '',
+      url: linkData?.url || '',
+      description: linkData?.description || '',
+      tags: initialData?.tags?.join(', ') || '',
     },
   });
 
@@ -125,9 +130,10 @@ export const AddLinkForm = ({ onSubmit, isLoading }: AddLinkFormProps) => {
 
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Save Link
+          {isEditing ? 'Update Link' : 'Save Link'}
         </Button>
       </form>
     </Form>
   );
 };
+

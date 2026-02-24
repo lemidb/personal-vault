@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Upload, X } from 'lucide-react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   Form,
   FormControl,
@@ -21,7 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { VaultType } from '@/types/vault';
+import { getDecryptedFileUrl } from '@/api/storage';
+import type { VaultType, DecryptedVaultEntry, ImageData } from '@/types/vault';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100),
@@ -38,22 +39,50 @@ interface AddImageFormProps {
     type: VaultType;
     data: { description?: string; filename: string; mimeType: string };
     tags?: string[];
-    file: File;
+    file?: File;
   }) => void;
   isLoading?: boolean;
+  initialData?: DecryptedVaultEntry;
 }
 
-export const AddImageForm = ({ onSubmit, isLoading }: AddImageFormProps) => {
+export const AddImageForm = ({ onSubmit, isLoading, initialData }: AddImageFormProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [isInitialLoading, setIsInitialLoading] = useState(false);
+  const isEditing = !!initialData;
+  const imageData = initialData?.data as ImageData | undefined;
+
+  useEffect(() => {
+    const loadInitialPreview = async () => {
+      if (initialData?.storage_path && imageData) {
+        setIsInitialLoading(true);
+        try {
+          const url = await getDecryptedFileUrl(
+            initialData.user_id,
+            initialData.storage_path,
+            imageData.mimeType || 'image/png'
+          );
+          setPreview(url);
+        } catch (error) {
+          console.error('Failed to load initial image preview:', error);
+        } finally {
+          setIsInitialLoading(false);
+        }
+      }
+    };
+
+    if (isEditing) {
+      loadInitialPreview();
+    }
+  }, [initialData, imageData, isEditing]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: '',
-      type: 'image',
-      description: '',
-      tags: '',
+      title: initialData?.title || '',
+      type: (initialData?.type as any) || 'image',
+      description: imageData?.description || '',
+      tags: initialData?.tags?.join(', ') || '',
     },
   });
 
@@ -75,7 +104,8 @@ export const AddImageForm = ({ onSubmit, isLoading }: AddImageFormProps) => {
   }, []);
 
   const handleSubmit = (data: FormData) => {
-    if (!file) return;
+    // File is required only when creating a new entry
+    if (!isEditing && !file) return;
 
     const tags = data.tags
       ? data.tags.split(',').map((t) => t.trim()).filter(Boolean)
@@ -86,11 +116,11 @@ export const AddImageForm = ({ onSubmit, isLoading }: AddImageFormProps) => {
       type: data.type,
       data: {
         description: data.description || undefined,
-        filename: file.name,
-        mimeType: file.type || 'image/png',
+        filename: file?.name || imageData?.filename || 'image.png',
+        mimeType: file?.type || imageData?.mimeType || 'image/png',
       },
       tags,
-      file,
+      file: file || undefined,
     });
   };
 
@@ -135,8 +165,12 @@ export const AddImageForm = ({ onSubmit, isLoading }: AddImageFormProps) => {
         />
 
         <div className="space-y-2">
-          <FormLabel>File</FormLabel>
-          {preview ? (
+          <FormLabel>File {isEditing && '(Optional - selects new image to replace current)'}</FormLabel>
+          {isInitialLoading ? (
+            <div className="flex h-40 items-center justify-center rounded-lg border border-border bg-secondary/30">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : preview ? (
             <div className="relative rounded-lg border border-border overflow-hidden">
               <img
                 src={preview}
@@ -201,11 +235,12 @@ export const AddImageForm = ({ onSubmit, isLoading }: AddImageFormProps) => {
           )}
         />
 
-        <Button type="submit" className="w-full" disabled={isLoading || !file}>
+        <Button type="submit" className="w-full" disabled={isLoading || (!isEditing && !file)}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Upload Encrypted Image
+          {isEditing ? 'Update Image' : 'Upload Encrypted Image'}
         </Button>
       </form>
     </Form>
   );
 };
+
