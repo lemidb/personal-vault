@@ -20,6 +20,14 @@ import { getDecryptedFileUrl } from '@/api/storage';
 import { supabase } from '@/integrations/supabase/client';
 import type { DecryptedVaultEntry, PasswordData, NoteData, LinkData, ImageData } from '@/types/vault';
 import { EditEntryDialog } from './EditEntryDialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 
 interface VaultEntryCardProps {
@@ -211,15 +219,8 @@ export const VaultEntryCard = ({ entry, onDelete, isDeleting }: VaultEntryCardPr
                     className="w-full h-40 object-cover transition-transform group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="gap-2"
-                      onClick={() => window.open(imageUrl, '_blank')}
-                    >
-                      <Maximize2 className="h-4 w-4" />
-                      View Full
-                    </Button>
+                    {/* TODO: Add a dialog to view the full image */}
+                    <ViewImageDialog imageUrl={imageUrl} />
                   </div>
                 </>
               ) : (
@@ -243,7 +244,7 @@ export const VaultEntryCard = ({ entry, onDelete, isDeleting }: VaultEntryCardPr
   };
 
   return (
-    <Card className="entry-card animate-in">
+    <Card className="entry-card animate-entry">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -274,27 +275,6 @@ export const VaultEntryCard = ({ entry, onDelete, isDeleting }: VaultEntryCardPr
                   <AlertDialogTitle>Delete entry?</AlertDialogTitle>
                   <AlertDialogDescription>
                     This action cannot be undone. The entry will be permanently deleted.
-                    {/* The following content was intended for a markdown file (walkthrough.md)
-                        but was provided as an edit to this JSX file.
-                        It is included here as a comment to maintain syntactic correctness. */}
-                    {`
-**No Duplication**: Confirmed that updating metadata alone does not create duplicate entries or redundant storage files.
-
-## Optimization: Smooth Theme Transitions
-
-I noticed that the theme transition felt "janky" because background and text colors were popping instantly on many elements while only cards had transitions.
-
-### Changes Made:
-
-1.  **Global Transitions**: Added \`transition-colors duration-300\` to the universal CSS selector (\`*\`) in \`index.css\`. This ensures that every element in the app—from the main background to individual text labels—fades smoothly over 300ms when the theme changes.
-2.  **Optimized Layout Repaints**: By using \`transition-colors\` instead of \`transition-all\`, we ensure that only specific properties like background, border, and text colors are transitioned, avoiding unnecessary layout recalculations and keeping the transition performant.
-
-### Verification Results
-
-#### Manual Verification
-- **Visual Smoothness**: Confirmed that toggling the theme now results in a unified, cinematic fade across the entire UI.
-- **Performance**: Verified that there is no perceived lag or stutter during the transition on the dashboard.
-`}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -328,3 +308,33 @@ I noticed that the theme transition felt "janky" because background and text col
     </Card>
   );
 };
+
+
+
+function ViewImageDialog({ imageUrl }: { imageUrl: string }) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="secondary" size="sm" className="gap-2">
+          <Maximize2 className="h-4 w-4" />
+          View Full
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-6xl w-[90vw] p-0 overflow-hidden bg-background/95 backdrop-blur-sm">
+        <DialogHeader className="p-6 pb-0">
+          <DialogTitle>View Image</DialogTitle>
+          <DialogDescription>
+            View the maximized image
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex items-center justify-center p-4 min-h-[50vh]">
+          <img
+            src={imageUrl}
+            alt="Full view"
+            className="max-w-full max-h-[70vh] object-contain rounded-md shadow-lg"
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}   

@@ -32,7 +32,20 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }, [theme]);
 
     const toggleTheme = React.useCallback(() => {
-        setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+        const updateTheme = () => setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+
+        // Use View Transition API if available
+        if (typeof document.startViewTransition === 'function') {
+            document.startViewTransition(updateTheme);
+        } else {
+            // Fallback: Disable transitions temporarily to avoid "scattering"
+            const root = document.documentElement;
+            root.classList.add('forced-no-transitions');
+            updateTheme();
+            // Force reflow
+            window.getComputedStyle(root).opacity;
+            root.classList.remove('forced-no-transitions');
+        }
     }, []);
 
     const value = React.useMemo<ThemeContextValue>(

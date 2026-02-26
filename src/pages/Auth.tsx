@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Shield, Loader2, Lock, Mail, Eye, EyeIcon } from 'lucide-react';
+import { Shield, Loader2, Lock, Mail, Eye, EyeIcon, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/services/useAuth';
+import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
 import { authSchema, type AuthFormData } from '@/schemas/vault';
 import {
   Form,
@@ -20,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { signIn, signUp } = useAuth();
@@ -66,6 +68,24 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
+
+  if (isForgotPassword) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-accent/10 px-4">
+        <div className="w-full max-w-md">
+          <div className="mb-8 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/25">
+              <Shield className="h-8 w-8 text-primary-foreground" />
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              <span className="gradient-text">Personal Vault</span>
+            </h1>
+          </div>
+          <ForgotPasswordForm onBack={() => setIsForgotPassword(false)} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-accent/10 px-4">
@@ -136,6 +156,18 @@ const Auth = () => {
                         </div>
                       </FormControl>
                       <FormMessage />
+                      {isLogin && (
+                        <div className="flex justify-end">
+                          <Button
+                            type="button"
+                            variant="link"
+                            onClick={() => setIsForgotPassword(true)}
+                            className="h-auto p-0 text-xs text-muted-foreground hover:text-primary"
+                          >
+                            forgot password ?
+                          </Button>
+                        </div>
+                      )}
                     </FormItem>
                   )}
                 />

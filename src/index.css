@@ -134,7 +134,7 @@
 
 @layer base {
   * {
-    @apply border-border transition-colors duration-300;
+    @apply border-border;
   }
 
 
@@ -165,7 +165,12 @@
   }
 
   .stat-card {
-    @apply relative overflow-hidden rounded-xl border border-border/50 bg-card p-6 transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5;
+    @apply relative overflow-hidden rounded-xl border border-border/50 bg-card p-6;
+    transition: border-color 0.2s ease, shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .stat-card:hover {
+    @apply border-primary/30 shadow-lg shadow-primary/5;
   }
 
 
@@ -182,7 +187,12 @@
   }
 
   .entry-card {
-    @apply relative overflow-hidden rounded-lg border border-border/50 bg-card p-4 transition-all duration-200 hover:border-border;
+    @apply relative overflow-hidden rounded-lg border border-border/50 bg-card p-4;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+  }
+
+  .entry-card:hover {
+    @apply border-border;
   }
 
 
@@ -197,11 +207,18 @@
 
 
 @layer utilities {
-  .animate-in {
-    animation: animateIn 0.3s ease-out;
+
+  /* Helper to prevent transition scattering during theme switch */
+  .forced-no-transitions,
+  .forced-no-transitions * {
+    transition: none !important;
   }
 
-  @keyframes animateIn {
+  .animate-entry {
+    animation: animateEntry 0.3s ease-out;
+  }
+
+  @keyframes animateEntry {
     from {
       opacity: 0;
       transform: translateY(8px);

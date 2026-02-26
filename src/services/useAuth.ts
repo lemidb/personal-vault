@@ -29,7 +29,7 @@ export const useAuth = () => {
 
   const signUp = useCallback(async (email: string, password: string) => {
     const redirectUrl = `${window.location.origin}/`;
-    
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -37,7 +37,7 @@ export const useAuth = () => {
         emailRedirectTo: redirectUrl,
       },
     });
-    
+
     if (error) throw error;
     return data;
   }, []);
@@ -47,13 +47,20 @@ export const useAuth = () => {
       email,
       password,
     });
-    
+
     if (error) throw error;
     return data;
   }, []);
 
   const signOut = useCallback(async () => {
     const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  }, []);
+
+  const resetPassword = useCallback(async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/change-password`,
+    });
     if (error) throw error;
   }, []);
 
@@ -64,6 +71,7 @@ export const useAuth = () => {
     signUp,
     signIn,
     signOut,
+    resetPassword,
     isAuthenticated: !!session,
   };
 };
