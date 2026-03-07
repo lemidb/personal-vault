@@ -8,11 +8,14 @@ import { AddEntryDialog } from '@/components/layout/AddEntryDialog';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { VaultList } from '@/components/vault/VaultList';
 import { VaultFilters } from '@/components/vault/VaultFilters';
+import { VaultUnlock } from '@/components/vault/VaultUnlock';
 import type { VaultType } from '@/types/vault';
 import { useEffect } from 'react';
+import { useVaultContext } from '@/contexts/VaultContext';
 
 const Dashboard = () => {
   const { user, loading: authLoading, signOut, isAuthenticated } = useAuth();
+  const { isUnlocked } = useVaultContext();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [selectedType, setSelectedType] = useState<VaultType | null>(null);
@@ -58,6 +61,17 @@ const Dashboard = () => {
   }
 
   if (!user) return null;
+
+  if (!isUnlocked) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header email={user.email} onSignOut={handleSignOut} />
+        <main className="container mx-auto px-4 py-8">
+          <VaultUnlock />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

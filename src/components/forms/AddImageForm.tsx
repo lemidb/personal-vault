@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { getDecryptedFileUrl } from '@/api/storage';
+import { useVaultContext } from '@/contexts/VaultContext';
 import type { VaultType, DecryptedVaultEntry, ImageData } from '@/types/vault';
 
 const formSchema = z.object({
@@ -49,18 +50,21 @@ export const AddImageForm = ({ onSubmit, isLoading, initialData }: AddImageFormP
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(false);
+  const { masterKey } = useVaultContext();
   const isEditing = !!initialData;
   const imageData = initialData?.data as ImageData | undefined;
 
   useEffect(() => {
     const loadInitialPreview = async () => {
+      if (!masterKey) return;
       if (initialData?.storage_path && imageData) {
         setIsInitialLoading(true);
         try {
           const url = await getDecryptedFileUrl(
             initialData.user_id,
             initialData.storage_path,
-            imageData.mimeType || 'image/png'
+            imageData.mimeType || 'image/png',
+            masterKey
           );
           setPreview(url);
         } catch (error) {
@@ -74,7 +78,7 @@ export const AddImageForm = ({ onSubmit, isLoading, initialData }: AddImageFormP
     if (isEditing) {
       loadInitialPreview();
     }
-  }, [initialData, imageData, isEditing]);
+  }, [initialData, imageData, isEditing, masterKey]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),

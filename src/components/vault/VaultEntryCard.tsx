@@ -20,6 +20,7 @@ import { getDecryptedFileUrl } from '@/api/storage';
 import { supabase } from '@/integrations/supabase/client';
 import type { DecryptedVaultEntry, PasswordData, NoteData, LinkData, ImageData } from '@/types/vault';
 import { EditEntryDialog } from './EditEntryDialog';
+import { useVaultContext } from '@/contexts/VaultContext';
 import {
   Dialog,
   DialogContent,
@@ -59,10 +60,13 @@ export const VaultEntryCard = ({ entry, onDelete, isDeleting }: VaultEntryCardPr
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isImageLoading, setIsImageLoading] = useState(false);
   const { toast } = useToast();
+  const { masterKey } = useVaultContext();
   const Icon = iconMap[entry.type];
 
   useEffect(() => {
     const loadImage = async () => {
+      if (!masterKey) return;
+
       if (
         entry.storage_path &&
         (entry.type === 'image' ||
@@ -75,7 +79,8 @@ export const VaultEntryCard = ({ entry, onDelete, isDeleting }: VaultEntryCardPr
           const url = await getDecryptedFileUrl(
             entry.user_id,
             entry.storage_path,
-            imageData.mimeType || 'image/png'
+            imageData.mimeType || 'image/png',
+            masterKey
           );
           setImageUrl(url);
         } catch (error) {
@@ -91,7 +96,7 @@ export const VaultEntryCard = ({ entry, onDelete, isDeleting }: VaultEntryCardPr
     return () => {
       if (imageUrl) URL.revokeObjectURL(imageUrl);
     };
-  }, [entry]);
+  }, [entry, masterKey]);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);

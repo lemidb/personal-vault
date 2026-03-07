@@ -10,15 +10,21 @@ import {
 import { uploadEncryptedFile, deleteFile } from '@/api/storage';
 import type { VaultType, VaultEntryData, CreateVaultEntryInput, UpdateVaultEntryInput } from '@/types/vault';
 import { useToast } from '@/hooks/use-toast';
+import { useVaultContext } from '@/contexts/VaultContext';
 
 export const useVaultEntries = (
   userId: string | undefined,
   filters?: { type?: VaultType; search?: string }
 ) => {
+  const { masterKey } = useVaultContext();
+
   return useQuery({
     queryKey: vaultKeys.entriesList(filters || {}),
-    queryFn: () => fetchVaultEntries(userId!, filters),
-    enabled: !!userId,
+    queryFn: async () => {
+      if (!masterKey) return [];
+      return fetchVaultEntries(userId!, filters, masterKey);
+    },
+    enabled: !!userId && !!masterKey,
     ...VAULT_QUERY_DEFAULTS,
   });
 };
@@ -35,6 +41,7 @@ export const useVaultStats = (userId: string | undefined) => {
 export const useAddVaultEntry = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { masterKey } = useVaultContext();
 
   return useMutation({
     mutationFn: async ({
@@ -48,7 +55,8 @@ export const useAddVaultEntry = () => {
 
       // Upload file if present
       if (input.file) {
-        storagePath = await uploadEncryptedFile(userId, input.file);
+        if (!masterKey) throw new Error("Vault is locked");
+        storagePath = await uploadEncryptedFile(userId, input.file, masterKey);
       }
 
       return createVaultEntry(
@@ -57,7 +65,8 @@ export const useAddVaultEntry = () => {
         input.title,
         input.data,
         input.tags,
-        storagePath
+        storagePath,
+        masterKey || undefined
       );
     },
     onSuccess: () => {
@@ -81,6 +90,7 @@ export const useUpdateVaultEntry = () => {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { masterKey } = useVaultContext();
 
   return useMutation({
     mutationFn: async ({
@@ -92,7 +102,8 @@ export const useUpdateVaultEntry = () => {
     }) => {
       let storagePath = undefined;
       if (input.file) {
-        storagePath = await uploadEncryptedFile(userId, input.file);
+        if (!masterKey) throw new Error("Vault is locked");
+        storagePath = await uploadEncryptedFile(userId, input.file, masterKey);
 
         if (input.oldStoragePath) {
           try {
@@ -108,7 +119,7 @@ export const useUpdateVaultEntry = () => {
         data: input.data,
         tags: input.tags,
         storagePath: storagePath,
-      });
+      }, masterKey || undefined);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: vaultKeys.all });

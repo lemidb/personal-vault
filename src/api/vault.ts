@@ -1,15 +1,33 @@
 import { supabase } from '@/integrations/supabase/client';
-import { encrypt, decrypt } from '@/lib/crypto';
+import { encryptText, decryptText } from '@/lib/crypto';
 import type { VaultEntry, VaultType, VaultEntryData, VaultStats, DecryptedVaultEntry } from '@/types/vault';
+
+export const serializeAndEncrypt = async (data: any, masterKey: CryptoKey): Promise<string> => {
+  const jsonString = JSON.stringify(data);
+  const { cipherTextBase64, ivBase64 } = await encryptText(jsonString, masterKey);
+  return JSON.stringify({ iv: ivBase64, c: cipherTextBase64 });
+};
+
+export const deserializeAndDecrypt = async <T>(encryptedString: string, masterKey: CryptoKey): Promise<T> => {
+  try {
+    const { iv, c } = JSON.parse(encryptedString);
+    const decryptedString = await decryptText(c, iv, masterKey);
+    return JSON.parse(decryptedString) as T;
+  } catch (err) {
+    console.error("Failed to decrypt entry", err);
+    throw new Error("Decryption failed for an entry.");
+  }
+};
 
 export const fetchVaultEntries = async (
   userId: string,
-  options?: {
+  options: {
     type?: VaultType;
     search?: string;
     limit?: number;
     offset?: number;
-  }
+  } | undefined,
+  masterKey: CryptoKey
 ): Promise<DecryptedVaultEntry[]> => {
   let query = supabase
     .from('vault_entries')
@@ -37,13 +55,22 @@ export const fetchVaultEntries = async (
 
   if (error) throw error;
 
-  return (data as VaultEntry[]).map((entry) => {
-    const decryptedData = decrypt<VaultEntryData>(entry.encrypted_data, userId);
-    return {
-      ...entry,
-      data: decryptedData,
-    } as DecryptedVaultEntry;
-  });
+  const decryptedEntries = await Promise.all(
+    (data as VaultEntry[]).map(async (entry) => {
+      let decryptedData: any = {};
+      try {
+        decryptedData = await deserializeAndDecrypt<VaultEntryData>(entry.encrypted_data, masterKey);
+      } catch (e) {
+        decryptedData = { error: 'Failed to decrypt' };
+      }
+      return {
+        ...entry,
+        data: decryptedData,
+      } as DecryptedVaultEntry;
+    })
+  );
+
+  return decryptedEntries;
 };
 
 export const fetchVaultStats = async (userId: string): Promise<VaultStats> => {
@@ -78,9 +105,11 @@ export const createVaultEntry = async (
   title: string,
   data: VaultEntryData,
   tags: string[] = [],
-  storagePath?: string
+  storagePath?: string,
+  masterKey?: CryptoKey
 ): Promise<VaultEntry> => {
-  const encryptedData = encrypt(data, userId);
+  if (!masterKey) throw new Error("Vault locked");
+  const encryptedData = await serializeAndEncrypt(data, masterKey);
 
   const { data: newEntry, error } = await supabase
     .from('vault_entries')
@@ -107,16 +136,18 @@ export const updateVaultEntry = async (
     data?: VaultEntryData;
     tags?: string[];
     storagePath?: string;
-  }
+  },
+  masterKey?: CryptoKey
 ): Promise<VaultEntry> => {
+  if (updates.data && !masterKey) throw new Error("Vault locked");
   const updatePayload: Record<string, unknown> = {};
 
   if (updates.title) {
     updatePayload.title = updates.title;
   }
 
-  if (updates.data) {
-    updatePayload.encrypted_data = encrypt(updates.data, userId);
+  if (updates.data && masterKey) {
+    updatePayload.encrypted_data = await serializeAndEncrypt(updates.data, masterKey);
   }
 
   if (updates.tags) {
