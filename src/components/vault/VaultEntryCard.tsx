@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Key, FileText, Link2, CreditCard, Image, Eye, EyeOff, Copy, Trash2, ExternalLink, Loader2, Maximize2 } from 'lucide-react';
+import { Key, FileText, Link2, CreditCard, Image, Eye, EyeOff, Copy, Trash2, ExternalLink, Loader2, Maximize2, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -225,7 +225,7 @@ export const VaultEntryCard = ({ entry, onDelete, isDeleting }: VaultEntryCardPr
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     {/* TODO: Add a dialog to view the full image */}
-                    <ViewImageDialog imageUrl={imageUrl} />
+                    <ViewImageDialog imageUrl={imageUrl} entry={entry} />
                   </div>
                 </>
               ) : (
@@ -316,7 +316,15 @@ export const VaultEntryCard = ({ entry, onDelete, isDeleting }: VaultEntryCardPr
 
 
 
-function ViewImageDialog({ imageUrl }: { imageUrl: string }) {
+function ViewImageDialog({ imageUrl, entry }: { imageUrl: string; entry: DecryptedVaultEntry }) {
+  const handleDownload = () => {
+    const link = document.createElement('a');
+    link.href = imageUrl;
+    const data = entry.data as ImageData;
+    link.download = data.filename || 'image';
+    link.click();
+  };
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -327,10 +335,18 @@ function ViewImageDialog({ imageUrl }: { imageUrl: string }) {
       </DialogTrigger>
       <DialogContent className="max-w-6xl w-[90vw] p-0 overflow-hidden bg-background/95 backdrop-blur-sm">
         <DialogHeader className="p-6 pb-0">
-          <DialogTitle>View Image</DialogTitle>
-          <DialogDescription>
-            View the maximized image
-          </DialogDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle>View Image</DialogTitle>
+              <DialogDescription>
+                View the maximized image
+              </DialogDescription>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleDownload} className="gap-2">
+              <Download className="h-4 w-4" />
+              Download
+            </Button>
+          </div>
         </DialogHeader>
         <div className="flex items-center justify-center p-4 min-h-[50vh]">
           <img

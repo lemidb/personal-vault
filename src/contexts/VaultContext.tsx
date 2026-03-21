@@ -101,7 +101,7 @@ export const VaultProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       toast({
         title: "Vault Secured",
-        description: "Your zero-knowledge vault is now ready.",
+        description: "Your vault is now ready.",
       });
     } catch (error: any) {
       console.error('Error setting up vault:', error);
